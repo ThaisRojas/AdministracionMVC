@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Crear Viaje</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #fbf5ff; 
+        }
+        
+        .titulo-ferry {
+            font-size: 2.8rem; 
+            font-weight: 900;  
+            color: #4a148c;    
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .linea-separadora {
+            border-color: #ab47bc;
+            opacity: 0.6;
+            border-width: 2px;
+        }
+
+        .tarjeta-formulario {
+            border: none;
+            border-top: 5px solid #ab47bc; 
+            border-radius: 12px;
+            background-color: white;
+        }
+
+        .btn-lila {
+            background-color: #ab47bc; 
+            border-color: #ab47bc;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-lila:hover {
+            background-color: #8e24aa; 
+            border-color: #8e24aa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(171, 71, 188, 0.4);
+            color: white;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #6a1b9a;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+
+    <h1 class="titulo-ferry text-center mb-3">Programar Nuevo Viaje</h1>
+    <hr class="linea-separadora mb-5">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} shadow-sm">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form action="/admin/viajes/crear" method="POST" class="card p-5 shadow-lg tarjeta-formulario mx-auto" style="max-width: 700px;">
+        
+        <div class="mb-4">
+            <label for="origen" class="form-label">Isla de Origen</label>
+            <select class="form-select border-primary-subtle" id="origen" name="origen_id" required>
+                <option value="" selected disabled>Seleccione un origen</option>
+                {% for isla in islas %}
+                    <option value="{{ isla.id }}">{{ isla.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="destino" class="form-label">Isla de Destino</label>
+            <select class="form-select border-primary-subtle" id="destino" name="destino_id" disabled required>
+                <option value="">Primero seleccione un origen</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="fecha" class="form-label">Fecha de Salida</label>
+            <input type="date" class="form-control border-primary-subtle" id="fecha" name="fecha_salida" required>
+        </div>
+
+        <div class="d-grid mt-2">
+            <button type="submit" class="btn btn-lila btn-lg">Guardar en la base de datos</button>
+        </div>
+    </form>
+
+    <script>
+        const selectOrigen = document.getElementById('origen');
+        const selectDestino = document.getElementById('destino');
+
+        selectOrigen.addEventListener('change', function() {
+            const origenId = this.value;
+            
+            selectDestino.disabled = false;
+            selectDestino.innerHTML = '<option value="">Cargando destinos</option>';
+
+            fetch(`/api/destinos/${origenId}`)
+                .then(response => response.json())
+                .then(data => {
+                    selectDestino.innerHTML = '<option value="">Seleccione el destino final</option>';
+                    data.forEach(isla => {
+                        selectDestino.innerHTML += `<option value="${isla.id}">${isla.nombre}</option>`;
+                    });
+                })
+                .catch(error => console.error('Error al cargar destinos:', error));
+        });
+    </script>
+
+</body>
+</html>
